@@ -8,10 +8,40 @@ export const navItems: NavItem[] = [
     label: 'Dashboard'
   },
   {
-    title: 'Students',
+    title: 'Members',
     href: '/student',
     icon: 'user',
     label: 'Student'
+  },
+  {
+    title: 'Identity Stores',
+    href: '/identity-stores', // Add this
+    // icon: 'identity-stores', // Add when you have an icon
+    label: 'Identity Stores'
+  },
+  {
+    title: 'Network Security',
+    href: '/network-security', // Add this
+    // icon: 'network-security', // Add when you have an icon
+    label: 'Network Security'
+  },
+  {
+    title: 'Data Stores',
+    href: '/data-stores', // Add this
+    // icon: 'data-stores', // Add when you have an icon
+    label: 'Data Stores'
+  },
+  {
+    title: 'Terminal',
+    href: '/terminal', // Add this
+    // icon: 'terminal', // Add when you have an icon
+    label: 'Terminal'
+  },
+  {
+    title: 'Chat Assistant',
+    href: '/chat', // Add this
+    // icon: 'chat', // Add when you have an icon
+    label: 'Chat'
   },
   {
     title: 'Login',
