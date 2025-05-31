@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Generated files via npm run build
+*.build.tsbuildinfo
+*.config.d.ts
+*.config.js
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

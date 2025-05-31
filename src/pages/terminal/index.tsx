@@ -1,3 +1,4 @@
+// services/frontend/dashboard/src/pages/terminal/index.tsx
 import FormPage from '@/pages/form';
 import NotFound from '@/pages/not-found';
 
@@ -7,7 +8,12 @@ import {
   ArrowUp as ThumbUp,
   ArrowDown as ThumbDown
 } from 'lucide-react';
-import { Button } from '@/components/ui/button'; // Assuming you have a Button component
+import { Button } from '@/components/ui/button';
+import {
+  SAMPLE_APPROVED_COMMAND,
+  SAMPLE_DENIED_COMMAND,
+  SOLICIT_INPUT_COMMANDS
+} from '@/constants/terminal_commands';
 
 type CommandStatus = 'pending' | 'approved' | 'denied';
 
@@ -20,11 +26,8 @@ export default function TerminalPage() {
   const [terminalOpen, setTerminalOpen] = useState(true); // Open by default
   const [command, setCommand] = useState('');
   const [output, setOutput] = useState<CommandOutput[]>([
-    {
-      command: '$ run identity-store --accounts privileged --MFA-enable true',
-      status: 'approved'
-    },
-    { command: '$ sudo apt upgrade couch-db', status: 'denied' }
+    { command: SAMPLE_APPROVED_COMMAND, status: 'approved' },
+    { command: SAMPLE_DENIED_COMMAND, status: 'denied' }
   ]); // Initial commands
 
   const handleCommand = () => {
@@ -107,10 +110,16 @@ export default function TerminalPage() {
                     </>
                   )}
                   {item.status === 'approved' && (
-                    <ThumbUp className="ml-2 h-4 w-4 text-green-500" />
+                    <ThumbUp
+                      className="ml-2 h-4 w-4 text-green-500"
+                      data-testid="approved-status-icon"
+                    />
                   )}
                   {item.status === 'denied' && (
-                    <ThumbDown className="ml-2 h-4 w-4 text-red-500" />
+                    <ThumbDown
+                      className="ml-2 h-4 w-4 text-red-500"
+                      data-testid="denied-status-icon"
+                    />
                   )}
                 </div>
               ))}
@@ -129,7 +138,7 @@ export default function TerminalPage() {
                     }
                   }}
                   className="w-full rounded-md bg-gray-800 bg-opacity-70 p-2 text-white focus:outline-none focus:ring-blue-500"
-                  placeholder="Type command here..."
+                  placeholder={SOLICIT_INPUT_COMMANDS}
                 />
               </div>
             </div>

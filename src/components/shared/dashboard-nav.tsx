@@ -1,3 +1,4 @@
+// services/frontend/dashboard/src/components/shared/dashboard-nav.tsx
 'use client';
 import { Icons } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
@@ -31,7 +32,7 @@ export default function DashboardNav({
     return null;
   }
 
-  console.log('isActive', isMobileNav, isMinimized);
+  // console.log('isActive', isMobileNav, isMinimized);
 
   return (
     <nav className="grid items-start gap-2">
@@ -54,13 +55,20 @@ export default function DashboardNav({
                     onClick={() => {
                       if (setOpen) setOpen(false);
                     }}
+                    // ADDED: aria-label to explicitly set the accessible name
+                    // This ensures getByRole('link', { name: item.title }) always works
+                    aria-label={item.title}
                   >
                     <Icon className={`ml-2.5 size-5`} />
 
                     {isMobileNav || (!isMinimized && !isMobileNav) ? (
                       <span className="mr-2 truncate">{item.title}</span>
                     ) : (
-                      ''
+                      // Removed the empty string and added sr-only span for visual hiding
+                      // while keeping the title accessible if aria-label wasn't used.
+                      // With aria-label on the <Link>, this inner span becomes less critical
+                      // but still good for progressive enhancement.
+                      <span className="sr-only">{item.title}</span>
                     )}
                   </Link>
                 </TooltipTrigger>

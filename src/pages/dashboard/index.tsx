@@ -1,3 +1,4 @@
+// services/frontend/dashboard/src/pages/dashboard/index.tsx
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -6,92 +7,15 @@ import {
   CardHeader,
   CardTitle
 } from '@/components/ui/card';
+import { dashboardPanes } from '@/constants/panes';
 import { Input } from '@/components/ui/input';
 import { Terminal } from 'lucide-react';
-import PageHead from '@/components/shared/page-head.jsx';
+import PageHead from '@/components/shared/page-head';
 import { useState } from 'react';
-import RecentSales from './components/recent-sales.js';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from '@/components/ui/tabs.js';
+import RecentSales from '@/components/recent-sales';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function DashboardPage() {
-  const panes = [
-    {
-      title: 'New',
-      content: [
-        {
-          title: 'Remove any exposure to my data stores with PII',
-          details: 'Data | High',
-          buttonText: 'Details'
-        },
-        {
-          title: 'Log all non MFA logins',
-          details: 'Identity | Medium',
-          buttonText: 'Investigate'
-        },
-        {
-          title: 'Patch vulnerability in MongoDB',
-          details: 'Security | Critical',
-          buttonText: 'Apply Patch'
-        }
-      ]
-    },
-    {
-      title: 'Needs Input',
-      content: [
-        {
-          title: 'Firewall rule review required on PAN-dmz-02-dallas',
-          details: 'Security | Urgent',
-          buttonText: 'Review'
-        },
-        {
-          title: 'Approve Model Context Protocol proxy installation',
-          details: 'Network | Medium',
-          buttonText: 'Approve'
-        }
-      ]
-    },
-    {
-      title: 'Handover',
-      content: [
-        {
-          title: 'Disable public access to all S3 buckets',
-          details: 'Identity | High',
-          buttonText: 'Details'
-        },
-        {
-          title: 'Prevent data exfil from Dev',
-          details: 'Data | High',
-          buttonText: 'Monitor'
-        }
-      ]
-    },
-    {
-      title: 'Running',
-      content: [
-        {
-          title: 'Prevent lateral move from subnet 10.10.5/24',
-          details: 'Network | Medium',
-          buttonText: 'Monitor'
-        }
-      ]
-    },
-    {
-      title: 'Completed',
-      content: [
-        {
-          title: 'Upgrade Firewall FW-Dallas-DMZ to latest version',
-          details: 'Security | Urgent',
-          buttonText: 'View Log'
-        }
-      ]
-    }
-  ];
-
   return (
     <>
       <PageHead title="Dashboard | App" />
@@ -126,7 +50,7 @@ export default function DashboardPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Completed
+                    Completed Issues
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -154,16 +78,24 @@ export default function DashboardPage() {
 
         {/* Task Board */}
         <div className="grid flex-1 grid-cols-5 gap-3 overflow-y-auto bg-gray-100 p-3">
-          {panes.map((pane) => (
+          {dashboardPanes.map((pane) => (
             <div
               key={pane.title}
               className="rounded-md bg-white p-3 text-black shadow"
+              // Adding role="list" to the container of the list items
+              // This makes the entire pane a semantic list
+              role="list"
             >
               <h2 className="text-md mb-1 text-center font-semibold">
                 {pane.title}
               </h2>
               {pane.content.map((item, index) => (
-                <Card key={index} className="mb-1 last:mb-0">
+                <Card
+                  key={index}
+                  className="mb-1 last:mb-0"
+                  // ADDED: role="listitem" for semantic meaning and testability
+                  role="listitem"
+                >
                   {' '}
                   {/* Added spacing */}
                   <CardContent className="flex flex-col items-center p-2">
