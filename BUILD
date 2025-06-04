@@ -37,7 +37,7 @@ js_binary(
         "src/**",
         "public/**",
     ]),
-    args = ["--host", "0.0.0.0", "--port", "3000"],
+    args = ["--host", "0.0.0.0", "--port", "3080"],
     chdir = package_name(),  # Crucial for Vite's file resolution
 )
 
