@@ -10,7 +10,7 @@ COPY package.json package-lock.json ./
 # Copy your Bazel-managed node_modules if it's physically present
 # This assumes 'npm_link_all_packages' creates a physical `node_modules`
 # and you're not using Bazel to manage it inside the Docker build.
-COPY node_modules node_modules/
+# COPY node_modules node_modules/
 
 # Install dependencies. `npm ci` is good for CI/CD as it uses package-lock.json
 RUN npm ci --prefer-offline || npm install # Fallback if `npm ci` fails without lockfile
