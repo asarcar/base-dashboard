@@ -67,6 +67,7 @@ js_test(
 )
 
 # Run 'vite build' to produce a dist/ directory as part of Bazel build graph
+# >_ bazel build //services/frontend/dashboard:build
 js_run_binary(
     name = "build",
     tool = ":dashboard",
@@ -122,6 +123,7 @@ oci_image(
 # oci_push does not support deps attribute,
 # so we ensure tests are run before pushing by calling
 # >_ bazel test //services/frontend/dashboard:dashboard_tests && \
+#    bazel build //services/frontend/dashboard:push_dashboard && \
 #    bazel run //services/frontend/dashboard:push_dashboard
 oci_push(
     name = "push_dashboard",
@@ -132,13 +134,9 @@ oci_push(
 
 # Produces docker loadable tarball
 # Validate the image by loading it into the local Docker daemon
-# bazel run //services/frontend/dashboard:dashboard_image_tar
-# docker run -d -p 3080:3080 ghcr.io/asarcar/itsecops/dashboard:latest
-# docker run -it --rm -p 3080:3080 ghcr.io/asarcar/itsecops/dashboard:latest
-# //services/frontend/dashboard:dashboard_image_tar
-# docker load -i bazel-bin/services/frontend/dashboard/dashboard_image_tar.tar
-# docker images | grep dashboard_image
-# docker run -it --rm -p 3080:3080 dashboard_image:latest
+# >_ bazel run //services/frontend/dashboard:dashboard_image_tar
+# >_ docker run -dit -p 3080:3080 --name=ghcrdashboard ghcr.io/asarcar/itsecops/dashboard:latest
+# >_ docker ps -a --filter name=ghcrdashboard 
 oci_load(
     name = "dashboard_image_tar",
     image = ":dashboard_image",

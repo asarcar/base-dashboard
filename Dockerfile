@@ -1,4 +1,10 @@
-# services/frontend/hello-app/Dockerfile
+# services/frontend/dashboard/Dockerfile
+# >_ docker build -t dashboard:latest .
+# >_ docker run -dit -p 3080:3080 --name dashboard dashboard:latest
+# >_ docker ps -a --filter name=dashboard
+# >_ docker attach dashboard
+#    CTRL+p CTRL+q to detach, CTFL+c to exit
+
 # Stage 1: Build the application
 FROM node:24-alpine AS build
 
