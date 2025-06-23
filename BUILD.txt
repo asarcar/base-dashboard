@@ -1,7 +1,10 @@
 # services/frontend/dashboard/BUILD
+# Version 14: Reverted js_binary to use 'data' for all inputs due to 'no deps attribute' error.
+# - js_binary now includes node_modules and globbed src/public files in its data attribute.
+# - js_run_binary (production build) retains its lean 'srcs' to minimize duplication for the build action.
 # js_binary runs the Vite CLI
 load("@aspect_rules_js//js:defs.bzl", "js_run_binary", "js_binary", "js_test")
-# npm_link_all_packages creates a Bazel - managed node_modules
+# npm_link_all_packages creates a Bazel-managed node_modules
 # folder in your bin tree.
 # This rule is exposed from the * generated * npm repository
 load("@npm_dashboard//:defs.bzl", "npm_link_all_packages")
@@ -12,19 +15,13 @@ load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_load")
 # execution need a physical node_modules directory
 npm_link_all_packages(name = "node_modules")
 
-# With Bazel and aspect_rules_js(or rules_js),
-# Node dependencies are NOT installed in project’s node_modules
-# Bazel creates an external repository(like @npm) containing
-# all npm packages where we must reference files
 js_binary(
     name = "dashboard",
-    # Use a wrapper script as the entry_point to execute the vite binary
-    # Path to your new wrapper script - services / frontend / hello - app / vite_wrapper.js
     entry_point = "vite_wrapper.js",
-    # The 'data' attribute is crucial for your application's source files
-    # that Vite needs to serve, the wrapper script, AND node_modules.
     data = [
-        ":node_modules",
+        # Re-adding node_modules to data as 'deps' attribute is not recognized in this environment.
+        ":node_modules", 
+        "babel.config.cjs",
         "components.json",
         "index.html",
         "package.json",
@@ -33,20 +30,25 @@ js_binary(
         "tsconfig.json",
         "tsconfig.build.json",
         "vercel.json",
-        "vite.config.ts",
         "vite_wrapper.js",
-    ] + glob([
+        "nginx.conf",
+        "vite.config.ts",
+    ] + glob([ # Re-adding glob for src and public as 'deps' attribute is not recognized.
         "src/**",
         "public/**",
     ]),
-    args = ["--host", "0.0.0.0", "--port", "3080"],
-    chdir = package_name(),  # Crucial for Vite's file resolution
+    args = ["--host=0.0.0.0", "--port=3080", "--config=vite.config.ts"],
+    chdir = package_name(),
+    # Removed 'deps' attribute as it caused 'no such attribute' error in this environment.
+    # deps = [
+    #     "@npm//:node_modules", # npm dependencies by Bazel
+    #     "//services/frontend/dashboard/src", # source code
+    # ],
 )
 
 js_test(
     name = "dashboard_tests",
     entry_point = "jest_wrapper.mjs",
-    args = ["--config=jest.config.cjs"],
     data = [
         ":node_modules",
         "jest.config.cjs",
@@ -56,25 +58,26 @@ js_test(
         "package.json",
         "jest.setup.mjs",
         "jest_wrapper.mjs",
-        # Include all your source files
+        "nginx.conf",
     ] + glob([
         "src/**",
         "__tests__/**",
         "__mocks__/**"
     ], allow_empty = True),
-    # Add the timeout attribute here
     timeout = "short",
+    args = ["--config=jest.config.cjs"],
 )
 
 # Run 'vite build' to produce a dist/ directory as part of Bazel build graph
-# >_ bazel build //services/frontend/dashboard:build
 js_run_binary(
     name = "build",
-    tool = ":dashboard",
-    args = ["build"],
+    tool = ":dashboard", # Use the js_binary 'dashboard' as the tool
     out_dirs = ["dist"],
+    env = {"NODE_ENV": "production"},
     srcs = [
-        ":node_modules",
+        # This section remains lean to prevent secondary duplication for the production build.
+        # It should only contain files explicitly needed by the js_run_binary action itself.
+        "babel.config.cjs",
         "components.json",
         "index.html",
         "package.json",
@@ -83,13 +86,15 @@ js_run_binary(
         "tsconfig.json",
         "tsconfig.build.json",
         "vercel.json",
-        "vite.config.ts",
-        "vite_wrapper.js",
         "nginx.conf",
-    ] + glob([
-        "src/**",
-        "public/**",
-    ]),
+        "pnpm-rollup-plugin.js",      # Custom plugin for Bazel
+        "vite.config.bazelprod.ts",   # Explicitly list the Bazel-specific PROD Vite config
+        "vite.config.ts",             # Only one instance of vite.config.ts
+        "vite_wrapper.js",            # The wrapper script itself
+        "public/vite.svg",            # Ensure public/* files included
+    ],
+    # Pass 'build' command, --config=file_name
+    args = ["build", "--config=vite.config.bazelprod.ts"],
 )
 
 # Package dist/ into a tarball
@@ -110,7 +115,7 @@ pkg_tar(
 # OCI image for production
 oci_image(
     name = "dashboard_image",
-    base = "@nginx_base//:nginx_base",  # Use a base image with Nginx
+    base = "@nginx_base//:nginx_base",
     tars = [":dist_tar", ":nginx_conf_tar"],
     labels = {
         "org.opencontainers.image.title": "Dashboard",
@@ -123,8 +128,14 @@ oci_image(
 # oci_push does not support deps attribute,
 # so we ensure tests are run before pushing by calling
 # >_ bazel test //services/frontend/dashboard:dashboard_tests && \
-#    bazel build //services/frontend/dashboard:push_dashboard && \
+#    bazel build //services/frontend/dashboard:dashboard && \
 #    bazel run //services/frontend/dashboard:push_dashboard
+# Docker commands - validate the image:
+# >_ docker pull ghcr.io/asarcar/itsecops/dashboard:latest
+# >_ docker run -dit -p 2080:2080 --name ghcrdashboard ghcr.io/asarcar/itsecops/dashboard:latest
+# >_ docker ps -a --filter name=ghcrdashboard
+# >_ docker attach ghcrdashboard
+#    CTRL+p CTRL+q to detach, CTFL+c to exit
 oci_push(
     name = "push_dashboard",
     image = ":dashboard_image",
@@ -135,8 +146,6 @@ oci_push(
 # Produces docker loadable tarball
 # Validate the image by loading it into the local Docker daemon
 # >_ bazel run //services/frontend/dashboard:dashboard_image_tar
-# >_ docker run -dit -p 3080:3080 --name=ghcrdashboard ghcr.io/asarcar/itsecops/dashboard:latest
-# >_ docker ps -a --filter name=ghcrdashboard 
 oci_load(
     name = "dashboard_image_tar",
     image = ":dashboard_image",
