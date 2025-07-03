@@ -1,146 +1,223 @@
 # services/frontend/dashboard/BUILD
-# Version 14: Reverted js_binary to use 'data' for all inputs due to 'no deps attribute' error.
-# - js_binary now includes node_modules and globbed src/public files in its data attribute.
-# - js_run_binary (production build) retains its lean 'srcs' to minimize duplication for the build action.
-# js_binary runs the Vite CLI
+
+#################################################################
+# Version 29:
+#################################################################
+#  graph LR
+#      A[npm_link_all_packages] --> B[Managed node_modules]
+#      B --> C[js_run_binary]
+#      C --> D[:_dashboard_wrapper]
+#      D --> E[Uses $(rootpath :_vite_tool)]
+#      E --> F[Clean dist output]
+#      F --> G[pkg_tar]
+#################################################################
+
+# For binary builds via Vite CLI runs
 load("@aspect_rules_js//js:defs.bzl", "js_run_binary", "js_binary", "js_test")
-# npm_link_all_packages creates a Bazel-managed node_modules
-# folder in your bin tree.
-# This rule is exposed from the * generated * npm repository
+
+# For creating a Bazel - managed node_modules folder in bin tree.
+# This rule is exposed from the *generated* npm repository
 load("@npm_dashboard//:defs.bzl", "npm_link_all_packages")
+
+# For creating docker image tars and pushing to GitHub Container Registry
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_load")
 
-# You only need npm_link_all_packages if other tools outside of Bazel's direct
-# execution need a physical node_modules directory
+# Load the 'bin' object for the 'vite' npm package.
+# This 'vite_bin' object will contain functions to create Bazel targets for Vite.
+load("@npm_dashboard//services/frontend/dashboard:vite/package_json.bzl", vite_bin = "bin")
+
+# This 'jest_bin' object will contain functions to create Bazel targets for Jest.
+load("@npm_dashboard//services/frontend/dashboard:jest/package_json.bzl", jest_bin = "bin")
+
+# Create a bazel managed node_modules for other tools (e.g. Vite)
 npm_link_all_packages(name = "node_modules")
 
+# listing individual packages to avoid duplication
+# otherwise we could just add ":node_modules"
+dashboard_package_data = [
+  ":node_modules/autoprefixer",
+  ":node_modules/axios",
+  ":node_modules/class-variance-authority",
+  ":node_modules/clsx",
+  ":node_modules/use-debounce",
+  ":node_modules/lucide-react",
+  ":node_modules/react-hook-form",
+  ":node_modules/postcss",
+  ":node_modules/react",
+  ":node_modules/react-dom",
+  ":node_modules/react-helmet-async",
+  ":node_modules/react-error-boundary",
+  ":node_modules/react-router-dom",
+  ":node_modules/tailwind-merge",
+  ":node_modules/tailwindcss",
+  ":node_modules/tailwindcss-animate",
+  ":node_modules/vite",
+  ":node_modules/zod",
+  ":node_modules/@hookform/resolvers",
+  ":node_modules/@radix-ui/react-avatar",
+  ":node_modules/@radix-ui/react-checkbox",
+  ":node_modules/@radix-ui/react-dialog",
+  ":node_modules/@radix-ui/react-dropdown-menu",
+  ":node_modules/@radix-ui/react-icons",
+  ":node_modules/@radix-ui/react-label",
+  ":node_modules/@radix-ui/react-select",
+  ":node_modules/@radix-ui/react-scroll-area",
+  ":node_modules/@radix-ui/react-slot",
+  ":node_modules/@tanstack/react-table",
+  ":node_modules/@radix-ui/react-tabs",
+  ":node_modules/@radix-ui/react-tooltip",
+  ":node_modules/@tanstack/react-query",
+  ":node_modules/@tanstack/react-query-devtools",
+  ":node_modules/@vitejs/plugin-react-swc",
+  # ...other config or source files
+] 
+
+dashboard_common_data = [
+  "babel.config.cjs",
+  "components.json",
+  "index.html",
+  "package.json",
+  "postcss.config.js",
+  "tailwind.config.js",
+  "tsconfig.json",
+  "tsconfig.build.json",
+  "vercel.json",
+  "vite_wrapper.js",            # The wrapper script itself
+  "pnpm-rollup-plugin.js",      # Custom plugin for Bazel
+  "nginx.conf",
+  "default.conf",
+]
+dashboard_common_glob = glob(["src/**", "public/**"], allow_empty = True)
+
+dashboard_test_data = [
+  "jest.setup.mjs",
+  "jest_wrapper.mjs",
+]
+dashboard_test_glob = glob(["__tests__/**", "__mocks__/**"], allow_empty = True)
+
+# Define a js_binary target for the Vite CLI itself.
+# This target (_vite_tool) can then be used as the 'tool' in other rules.
+# "//services/frontend/dashboard:.aspect_rules_js/node_modules/vite@5.1.6_at_types_node_20.19.1"
+vite_bin.vite_binary(
+  name = "_vite_tool",
+)
+
 js_binary(
-    name = "dashboard",
-    entry_point = "vite_wrapper.js",
-    data = [
-        # Re-adding node_modules to data as 'deps' attribute is not recognized in this environment.
-        ":node_modules", 
-        "babel.config.cjs",
-        "components.json",
-        "index.html",
-        "package.json",
-        "postcss.config.js",
-        "tailwind.config.js",
-        "tsconfig.json",
-        "tsconfig.build.json",
-        "vercel.json",
-        "vite_wrapper.js",
-        "nginx.conf",
-        "vite.config.ts",
-    ] + glob([ # Re-adding glob for src and public as 'deps' attribute is not recognized.
-        "src/**",
-        "public/**",
-    ]),
-    args = ["--host=0.0.0.0", "--port=3080", "--config=vite.config.ts"],
-    chdir = package_name(),
-    # Removed 'deps' attribute as it caused 'no such attribute' error in this environment.
-    # deps = [
-    #     "@npm//:node_modules", # npm dependencies by Bazel
-    #     "//services/frontend/dashboard/src", # source code
-    # ],
+  name = "dashboard_dev",
+  entry_point = "vite_wrapper.js",
+  data = [":node_modules", ":_vite_tool", "vite.config.ts"] + 
+    dashboard_common_data + dashboard_common_glob,
+  args = ["--host=0.0.0.0", "--port=3080"],
+  env = {
+    "NODE_ENV": "development",
+    "VITE_BINARY_PATH": "$(rootpath :_vite_tool)", 
+    "VITE_CONFIG_PATH": "$(rootpath vite.config.ts)",
+  },
+)
+
+# Define a js_binary target for the Jest CLI itself.
+# This target (_jest_tool) can then be used as the 'tool' in other rules.
+# "//services/frontend/dashboard:.aspect_rules_js/node_modules/jest@29.7.0_at_types_node_20.19.1"
+jest_bin.jest_binary(
+  name = "_jest_tool",
 )
 
 js_test(
-    name = "dashboard_tests",
-    entry_point = "jest_wrapper.mjs",
-    data = [
-        ":node_modules",
-        "jest.config.cjs",
-        "babel.config.cjs",
-        "tsconfig.json",
-        "tsconfig.build.json",
-        "package.json",
-        "jest.setup.mjs",
-        "jest_wrapper.mjs",
-        "nginx.conf",
-    ] + glob([
-        "src/**",
-        "__tests__/**",
-        "__mocks__/**"
-    ], allow_empty = True),
-    timeout = "short",
-    args = ["--config=jest.config.cjs"],
+  name = "dashboard_tests",
+  entry_point = "jest_wrapper.mjs",
+  data = [":node_modules", ":_jest_tool", "jest.config.cjs"] + 
+    dashboard_common_data + dashboard_test_data + 
+    dashboard_common_glob + dashboard_test_glob,
+  timeout = "short",
+  env = {
+    "NODE_ENV": "test",
+    "JEST_BINARY_PATH": "$(rootpath :_jest_tool)", 
+    "JEST_CONFIG_PATH": "$(rootpath jest.config.cjs)",
+  },
+)
+
+# js_binary rule for the wrapper script
+js_binary(
+  name = "_dashboard_wrapper",
+  entry_point = "vite_wrapper.js",
+  # Vite CLI invoked by wrapper when building the downstream dashboard_build
+  data = [":_vite_tool", "vite.config.bazelprod.ts"], 
+  env = {
+    "NODE_ENV": "production",
+    "VITE_BINARY_PATH": "$(rootpath :_vite_tool)", 
+    "VITE_CONFIG_PATH": "$(rootpath vite.config.bazelprod.ts)",
+  },
+)
+
+# dashboard_prod target used to validate production dist folder 
+js_binary(
+  name = "dashboard_prod",
+  entry_point = "vite_wrapper.js",
+  data = [":_vite_tool", "vite.config.bazelprod.ts"] + 
+    dashboard_package_data + dashboard_common_data + dashboard_common_glob,
+  env = {
+    "NODE_ENV": "production",
+    "VITE_BINARY_PATH": "$(rootpath :_vite_tool)", 
+    "VITE_CONFIG_PATH": "$(rootpath vite.config.bazelprod.ts)",
+  },
+  args = ["build"],
 )
 
 # Run 'vite build' to produce a dist/ directory as part of Bazel build graph
 js_run_binary(
-    name = "build",
-    tool = ":dashboard", # Use the js_binary 'dashboard' as the tool
-    out_dirs = ["dist"],
-    env = {"NODE_ENV": "production"},
-    srcs = [
-        # This section remains lean to prevent secondary duplication for the production build.
-        # It should only contain files explicitly needed by the js_run_binary action itself.
-        "babel.config.cjs",
-        "components.json",
-        "index.html",
-        "package.json",
-        "postcss.config.js",
-        "tailwind.config.js",
-        "tsconfig.json",
-        "tsconfig.build.json",
-        "vercel.json",
-        "nginx.conf",
-        "pnpm-rollup-plugin.js",      # Custom plugin for Bazel
-        "vite.config.bazelprod.ts",   # Explicitly list the Bazel-specific PROD Vite config
-        "vite.config.ts",             # Only one instance of vite.config.ts
-        "vite_wrapper.js",            # The wrapper script itself
-        "public/vite.svg",            # Ensure public/* files included
-    ],
-    # Pass 'build' command, --config=file_name
-    args = ["build", "--config=vite.config.bazelprod.ts"],
+  name = "dashboard_build",
+  tool = ":_dashboard_wrapper",
+  srcs = [":_vite_tool", "vite.config.bazelprod.ts"] + 
+    dashboard_package_data + dashboard_common_data + dashboard_common_glob,
+  env = {
+    "NODE_ENV": "production",
+    "VITE_BINARY_PATH": "$(rootpath :_vite_tool)", 
+    "VITE_CONFIG_PATH": "$(rootpath vite.config.bazelprod.ts)",
+  },
+  args = ["build"],
+  out_dirs = ["dist"],
+  # outs = ["vite_build_output.txt", "vite_wrapper_debug.txt"],
 )
 
 # Package dist/ into a tarball
 pkg_tar(
-    name = "dist_tar",
-    srcs = [":build"],
-    package_dir = "/usr/share/nginx/html",
-    strip_prefix = "dist",
+  name = "dashboard_dist_tar",
+  srcs = [":dashboard_build"],
+  package_dir = "/usr/share/nginx/html",
+  strip_prefix = "dist",
 )
 
-# Package nginx.conf to the correct location in the container
+# Package the main nginx.conf to /etc/nginx/
 pkg_tar(
-    name = "nginx_conf_tar",
-    srcs = ["default.conf"],
-    package_dir = "/etc/nginx/conf.d",
+  name = "nginx_main_conf_tar",
+  srcs = ["nginx.conf"],
+  package_dir = "/etc/nginx",
+  strip_prefix =  "./",
+)
+
+# Package default.conf to /etc/nginx/conf.d/
+pkg_tar(
+  name = "nginx_default_conf_tar",
+  srcs = ["default.conf"],
+  package_dir = "/etc/nginx/conf.d",
+  strip_prefix =  "./",
 )
 
 # OCI image for production
 oci_image(
-    name = "dashboard_image",
-    base = "@nginx_base//:nginx_base",
-    tars = [":dist_tar", ":nginx_conf_tar"],
-    labels = {
-        "org.opencontainers.image.title": "Dashboard",
-        "org.opencontainers.image.source": "https://github.com/asarcar/ITSecOps",
-        "org.opencontainers.image.exposed_ports": "3080/tcp",
-    },
-)
-
-# Push image to GHCR, depends on tests
-# oci_push does not support deps attribute,
-# so we ensure tests are run before pushing by calling
-# >_ bazel test //services/frontend/dashboard:dashboard_tests && \
-#    bazel build //services/frontend/dashboard:dashboard && \
-#    bazel run //services/frontend/dashboard:push_dashboard
-# Docker commands - validate the image:
-# >_ docker pull ghcr.io/asarcar/itsecops/dashboard:latest
-# >_ docker run -dit -p 2080:2080 --name ghcrdashboard ghcr.io/asarcar/itsecops/dashboard:latest
-# >_ docker ps -a --filter name=ghcrdashboard
-# >_ docker attach ghcrdashboard
-#    CTRL+p CTRL+q to detach, CTFL+c to exit
-oci_push(
-    name = "push_dashboard",
-    image = ":dashboard_image",
-    repository = "ghcr.io/asarcar/itsecops/dashboard",
-    remote_tags = ["latest"],
+  name = "dashboard_image",
+  base = "@nginx_base//:nginx_base",
+  tars = [
+    ":dashboard_dist_tar", 
+    ":nginx_main_conf_tar", 
+    ":nginx_default_conf_tar"
+  ],
+  labels = {
+    "org.opencontainers.image.title": "Dashboard",
+    "org.opencontainers.image.source": "https://github.com/asarcar/ITSecOps",
+    "org.opencontainers.image.exposed_ports": "3080/tcp",
+  },
 )
 
 # Produces docker loadable tarball
@@ -150,4 +227,23 @@ oci_load(
     name = "dashboard_image_tar",
     image = ":dashboard_image",
     repo_tags = ["ghcr.io/asarcar/itsecops/dashboard:latest"],
+)
+
+# Push image to GHCR, depends on tests
+# oci_push does not support deps attribute,
+# so we ensure tests are run before pushing by calling
+# >_ bazel test //services/frontend/dashboard:dashboard_tests && \
+#    bazel build //services/frontend/dashboard:push_dashboard && \
+#    bazel run //services/frontend/dashboard:push_dashboard
+# Docker commands - validate the image:
+# >_ docker pull ghcr.io/asarcar/itsecops/dashboard:latest
+# >_ docker run -dit -p 3080:3080 --name ghcrdashboard ghcr.io/asarcar/itsecops/dashboard:latest
+# >_ docker ps -a --filter name=ghcrdashboard
+# >_ docker attach ghcrdashboard
+#    CTRL+p CTRL+q to detach, CTFL+c to exit
+oci_push(
+    name = "push_dashboard",
+    image = ":dashboard_image",
+    repository = "ghcr.io/asarcar/itsecops/dashboard",
+    remote_tags = ["latest"],
 )

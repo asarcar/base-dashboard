@@ -4,42 +4,49 @@ import path from 'path';
 import { spawnSync } from 'child_process';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { EnvelopeClosedIcon } from '@radix-ui/react-icons';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const CWD = process.cwd();
+const ENV = process.env;
 
-const nodeModulesPath = path.join(__dirname, 'node_modules');
-const jestBin = path.join(nodeModulesPath, 'jest', 'bin', 'jest.js');
-const configPath = path.join(__dirname, 'jest.config.cjs');
+const jestRelPath = ENV.JEST_BINARY_PATH;
+const jestBinPath = path.resolve(CWD, jestRelPath);
+const jestConfigRelPath = ENV.JEST_CONFIG_PATH;
+const jestConfigPath = path.resolve(CWD, jestConfigRelPath);
+if (!jestConfigPath || !fs.existsSync(jestConfigPath)) {
+  console.error(
+    `FATAL: Vite binary ${jestConfigPath} not found at ${jestConfigRelPath}`
+  );
+  process.exit(1);
+}
+
+if (!fs.existsSync(jestBinPath)) {
+  console.error(`Jest binary not found at ${jestBinPath}`);
+  process.exit(1);
+}
+if (!fs.existsSync(jestConfigPath)) {
+  console.error(`Jest config not found at ${jestConfigPath}`);
+  process.exit(1);
+}
 
 // Optional: Debugging output
 console.log('Jest Wrapper: Starting...');
-console.log('CWD:', process.cwd());
+console.log('CWD:', CWD);
 console.log('__dirname:', __dirname);
-console.log('Node Modules Path:', nodeModulesPath);
-console.log('Jest Binary:', jestBin);
-console.log('Config Path:', configPath);
+console.log('Jest Binary:', jestBinPath);
+console.log('Jest Config Path:', jestConfigPath);
 
-if (!fs.existsSync(jestBin)) {
-  console.error(`Jest binary not found at ${jestBin}`);
-  process.exit(1);
-}
-if (!fs.existsSync(configPath)) {
-  console.error(`Jest config not found at ${configPath}`);
-  process.exit(1);
-}
-
-// Replace --config=... with the resolved config path
-const args = process.argv
-  .slice(2)
-  .map((arg) => (arg.startsWith('--config=') ? `--config=${configPath}` : arg));
-
-// Always include --experimental-vm-modules for Jest ESM support
-const nodeArgs = ['--experimental-vm-modules', jestBin, ...args];
-
-const result = spawnSync(process.execPath, nodeArgs, {
+const jestFinalArgs = [...process.argv.slice(2), '--config', jestConfigPath];
+const jestProcess = spawnSync(jestBinPath, jestFinalArgs, {
   stdio: 'inherit',
-  cwd: process.cwd()
+  // Set working directory to where jest.config.cjs is located
+  cwd: path.dirname(jestConfigPath),
+  env: ENV
 });
+console.log(
+  `Child process spawned with PID: ${jestProcess.pid} and args: ${jestFinalArgs.join(' ')}`
+);
 
-process.exit(result.status || 0);
+process.exit(jestProcess.status || 0);

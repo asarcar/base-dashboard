@@ -1,5 +1,5 @@
 // services/frontend/dashboard/vite.config.ts
-// Version 4 (local config with manualChunks for React, sanitizeFileName fix, and fileURLToPath typo fix)
+// Version 5 (require.resolve for react and react-dom)
 
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
@@ -9,14 +9,20 @@ import { fileURLToPath } from 'url'; // Correct import
 const __filename = fileURLToPath(import.meta.url); // Corrected function call
 const __dirname = path.dirname(__filename);
 
+console.log(`[vite.config.ts]: version 5 called`);
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
+    // preserveSymlinks: true, // leave preserveSymlinks to default=false
     alias: {
+      react: 'react',
+      'react-dom': 'react-dom',
       '@': path.resolve(__dirname, './src')
     }
   },
   build: {
+    minify: false,
     outDir: 'dist',
     sourcemap: true,
     rollupOptions: {
@@ -29,24 +35,35 @@ export default defineConfig({
           return name.replace(/[^a-zA-Z0-9_.-]/g, '_');
         },
         manualChunks: (id: string) => {
+          console.log(`[manualChunks DEBUG] ID: ${id}`);
           if (id.includes('node_modules')) {
-            // More robust check for React/ReactDOM to ensure they are chunked together
-            // A single chunk for React and related core deps
             if (
               id.includes('react') ||
               id.includes('react-dom') ||
+              id.includes('react-jsx-runtime') ||
               id.includes('@remix-run/router')
             ) {
-              console.log(`[manualChunks DEBUG] React/Remix-related ID: ${id}`);
+              console.log(
+                `[manualChunks DEBUG] React/Remix-related ID: ${id} -> assigned to 'react-and-deps'`
+              );
               return 'react-and-deps';
             } else {
-              console.log(`[manualChunks DEBUG] Vendor ID: ${id}`); // Add this line for general vendor m odules
+              console.log(
+                `[manualChunks DEBUG] Vendor ID: ${id} -> assigned to 'vendor'`
+              );
               return 'vendor';
             }
           }
-          return undefined;
+          // Default behavior for app code (not in node_modules) or if no custom rule applies
+          return undefined; // Return undefined to let Rollup's default chunking handle it
         }
       }
     }
+  },
+  // port used for local rendering via bazel run
+  server: {
+    port: 3080,
+    open: false,
+    cors: true
   }
 });

@@ -28,7 +28,14 @@ import {
   useReactTable
 } from '@tanstack/react-table';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
-import React from 'react';
+console.log('=== COMPONENTS/SHARED/DATA-TABLE DEBUG ===');
+import * as React from 'react'; // was import React from 'react';
+console.log('components/shared/data-table React:', React);
+console.log(
+  'components/shared/data-table (useState, useEffect):',
+  typeof React?.useState,
+  typeof React?.useEffect
+);
 import { useSearchParams } from 'react-router-dom';
 
 interface DataTableProps<TData, TValue> {
