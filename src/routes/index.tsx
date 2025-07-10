@@ -1,3 +1,4 @@
+// src/routes/index.tsx
 import FormPage from '@/pages/form';
 import NotFound from '@/pages/not-found';
 import { Suspense, lazy } from 'react';
@@ -13,7 +14,14 @@ const StudentPage = lazy(() => import('@/pages/students'));
 const StudentDetailPage = lazy(
   () => import('@/pages/students/StudentDetailPage')
 );
-
+/*
+import DashboardLayout from '@/components/layout/dashboard-layout'
+import DashboardPage from '@/pages/dashboard'
+import TerminalPage from '@/pages/terminal'
+import SignInPage from '@/pages/auth/signin';
+import StudentPage from '@/pages/students';
+import StudentDetailPage from '@/pages/students/StudentDetailPage'
+*/
 // ----------------------------------------------------------------------
 
 export default function AppRouter() {
@@ -33,12 +41,12 @@ export default function AppRouter() {
           index: true
         },
         {
-          path: 'student',
-          element: <StudentPage />
+          path: 'team',
+          element: <StudentPage /> // Modify this component
         },
         {
-          path: 'student/details',
-          element: <StudentDetailPage />
+          path: 'team/details',
+          element: <StudentDetailPage /> // Modify this component
         },
         {
           path: 'form',
@@ -46,15 +54,15 @@ export default function AppRouter() {
         },
         {
           path: 'identity-stores',
-          element: <StudentPage /> // Create this component
+          element: <div>Identity Stores</div> // Create this component
         },
         {
           path: 'network-security',
-          element: <StudentPage /> // Create this component
+          element: <div>Network Security</div> // Create this component
         },
         {
           path: 'data-stores',
-          element: <StudentPage /> // Create this component
+          element: <div>Data Stores</div> // Create this component
         },
         {
           path: 'terminal',
@@ -62,7 +70,7 @@ export default function AppRouter() {
         },
         {
           path: 'chat',
-          element: <StudentPage /> // Create this component
+          element: <div>Chat</div> // Create this component
         }
       ]
     }
@@ -83,7 +91,6 @@ export default function AppRouter() {
       element: <Navigate to="/404" replace />
     }
   ];
-
   const routes = useRoutes([...dashboardRoutes, ...publicRoutes]);
 
   return routes;

@@ -1,6 +1,5 @@
-// services/frontend/dashboard/src/__tests__/navigation.spec.tsx
-// import { jest } from '@jest/globals';
-import { render, screen, waitFor } from '@testing-library/react';
+// src/__tests__/navigation.spec.tsx
+import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import AppRouter from '@/routes';
 import { navItems } from '@/constants/data';

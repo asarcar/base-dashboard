@@ -1,4 +1,4 @@
-// services/frontend/dashboard/src/components/shared/dashboard-nav.tsx
+// src/components/shared/dashboard-nav.tsx
 'use client';
 import { Icons } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
@@ -31,8 +31,6 @@ export default function DashboardNav({
   if (!items?.length) {
     return null;
   }
-
-  // console.log('isActive', isMobileNav, isMinimized);
 
   return (
     <nav className="grid items-start gap-2">

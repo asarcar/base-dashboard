@@ -1,29 +1,37 @@
-// src/routes/hooks/use-router.tsx - Debug version
+// src/routes/hooks/use-router.tsx
 import { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useInRouterContext, useNavigate } from 'react-router-dom';
 
-// Add debug logging
-console.log('=== USE-ROUTER DEBUG ===');
-console.log('React from useMemo import:', typeof useMemo);
+// adding type safety interface to help catch mistakes
+interface SafeRouter {
+  back: () => void;
+  forward: () => void;
+  reload: () => void;
+  push: (href: string) => void;
+  replace: (href: string) => void;
+}
 
-// Check if React is available globally
-console.log('Global React:', typeof (globalThis as any).React);
-console.log('Window React:', typeof (window as any).React);
+const emptyRouter = {
+  back: () => {},
+  forward: () => {},
+  reload: () => {},
+  push: (_: string) => {},
+  replace: (_: string) => {}
+};
 
-// DEBUG
-import * as React from 'react'; // was import React from 'react';
-console.log('use-router React:', React);
-console.log('use-router React.useContext:', typeof React?.useContext);
+export function useRouter(): SafeRouter {
+  let router = emptyRouter;
 
-export function useRouter() {
-  console.log('useRouter: About to call useNavigate()');
-  console.log('useNavigate function:', useNavigate);
+  if (!useInRouterContext()) {
+    console.warn(
+      '[useRouter] called outside <BrowserRouter> context. Returning no-op router.'
+    );
+    return router;
+  }
 
   try {
     const navigate = useNavigate();
-    console.log('useRouter: useNavigate() succeeded');
-
-    const router = useMemo(
+    router = useMemo(
       () => ({
         back: () => navigate(-1),
         forward: () => navigate(1),
@@ -33,11 +41,10 @@ export function useRouter() {
       }),
       [navigate]
     );
-
-    return router;
   } catch (error) {
-    console.error('useRouter: useNavigate() failed:', error);
-    console.error('React at error time:', React);
+    console.error(`useRouter: useNavigate failed with error: ${error}`);
     throw error;
   }
+
+  return router;
 }

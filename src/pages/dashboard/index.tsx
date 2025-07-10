@@ -1,23 +1,16 @@
-// services/frontend/dashboard/src/pages/dashboard/index.tsx
+// src/pages/dashboard/index.tsx
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { dashboardPanes } from '@/constants/panes';
 import { Input } from '@/components/ui/input';
-import { Terminal } from 'lucide-react';
 import PageHead from '@/components/shared/page-head';
-import { useState } from 'react';
-import RecentSales from '@/components/recent-sales';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ValidateReact } from '@/debug/DebugUtils';
 
 export default function DashboardPage() {
   return (
     <>
+      <ValidateReact name="DashboardPage" />
       <PageHead title="Dashboard | App" />
       <div className="max-h-screen flex-1 space-y-4 overflow-y-auto p-4 pt-6 md:p-8">
         <div className="flex items-center justify-between space-y-2">
@@ -101,7 +94,7 @@ export default function DashboardPage() {
                   <CardContent className="flex flex-col items-center p-2">
                     <div className="text-sm font-medium">{item.title}</div>
                     <div className="text-xs">{item.details}</div>
-                    <Button className="mt-1 text-xs" size="xs">
+                    <Button className="mt-1 text-xs" size="sm">
                       {item.buttonText}
                     </Button>
                   </CardContent>

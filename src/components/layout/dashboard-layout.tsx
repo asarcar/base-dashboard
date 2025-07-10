@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import Sidebar from '../shared/sidebar';
-import Header from '../shared/header';
-import MobileSidebar from '../shared/mobile-sidebar';
+import Sidebar from '@/components/shared/sidebar';
+import Header from '@/components/shared/header';
+import MobileSidebar from '@/components/shared/mobile-sidebar';
 import { MenuIcon } from 'lucide-react';
+import { ValidateReact } from '@/debug/DebugUtils';
 
 export default function DashboardLayout({
   children
@@ -13,6 +14,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-secondary">
+      <ValidateReact name="DashboardLayout" />
       <MobileSidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}

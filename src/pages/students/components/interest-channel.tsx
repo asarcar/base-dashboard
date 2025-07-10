@@ -1,8 +1,10 @@
+// src/pages/students/components/interest-channel.tsx
 import { useSearchParams } from 'react-router-dom';
-import { useGetStudents } from '../queries/queries';
+import { useGetStudents } from '@/pages/students/queries/queries';
 import { useState } from 'react';
 import PaginationSection from '@/components/shared/pagination-section';
 import { GitHubLogoIcon } from '@radix-ui/react-icons';
+import type { Student } from '@/pages/students/queries/queries';
 
 const InterestChannel = ({ title }: { title: string }) => {
   const [searchParams] = useSearchParams();
@@ -11,10 +13,10 @@ const InterestChannel = ({ title }: { title: string }) => {
   const pageLimit = 6;
   const country = searchParams.get('search') || null;
   const offset = (currentPage - 1) * pageLimit;
-  const { data } = useGetStudents(offset, pageLimit, country);
+  const { data } = useGetStudents(offset, pageLimit, country ?? '');
   const users = data?.users;
   console.log('users', users);
-  const totalUsers = data?.total_users; //1000
+  const totalUsers = data?.total_users ?? 0; //1000
 
   return (
     <div className="flex w-full flex-col rounded-t-3xl bg-background shadow-xl xl:m-7 ">
@@ -24,10 +26,10 @@ const InterestChannel = ({ title }: { title: string }) => {
         </h1>
       </div>
       {/* Mapping through repeatItems array to render the content 7 times */}
-      {users?.map((item: any, index: number) => (
-        <div key={index} className="my-5 ml-7 flex flex-row">
+      {users?.map((user: Student, index: number) => (
+        <div key={user.id || index} className="my-5 ml-7 flex flex-row">
           <GitHubLogoIcon />
-          <p className="ml-7">{item.city}</p>
+          <p className="ml-7">{user.city}</p>
         </div>
       ))}
 

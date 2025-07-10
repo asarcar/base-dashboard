@@ -42,12 +42,12 @@ dashboard_package_data = [
   ":node_modules/clsx",
   ":node_modules/use-debounce",
   ":node_modules/lucide-react",
-  ":node_modules/react-hook-form",
   ":node_modules/postcss",
   ":node_modules/react",
   ":node_modules/react-dom",
-  ":node_modules/react-helmet-async",
   ":node_modules/react-error-boundary",
+  ":node_modules/react-helmet-async",
+  ":node_modules/react-hook-form",
   ":node_modules/react-router-dom",
   ":node_modules/tailwind-merge",
   ":node_modules/tailwindcss",
@@ -64,11 +64,11 @@ dashboard_package_data = [
   ":node_modules/@radix-ui/react-select",
   ":node_modules/@radix-ui/react-scroll-area",
   ":node_modules/@radix-ui/react-slot",
-  ":node_modules/@tanstack/react-table",
   ":node_modules/@radix-ui/react-tabs",
   ":node_modules/@radix-ui/react-tooltip",
   ":node_modules/@tanstack/react-query",
   ":node_modules/@tanstack/react-query-devtools",
+  ":node_modules/@tanstack/react-table",
   ":node_modules/@vitejs/plugin-react-swc",
   # ...other config or source files
 ] 
@@ -88,13 +88,46 @@ dashboard_common_data = [
   "nginx.conf",
   "default.conf",
 ]
-dashboard_common_glob = glob(["src/**", "public/**"], allow_empty = True)
+dashboard_common_glob = glob(
+  include = [
+  "src/**",
+  "public/**",
+  ],
+  exclude = [
+  "src/**/__tests__/**",
+  "src/**/__mocks__/**",
+  "src/**/*.spec.ts",
+  "src/**/*.spec.tsx",
+  "src/**/*.test.ts",
+  "src/**/*.test.tsx",
+  "__tests__/**",
+  "__mocks__/**",
+  ], 
+  allow_empty = True
+)
+# Lists dashboard_common_glob
+# bazel cquery //services/frontend/dashboard:dashboard_debug_common_glob --output=files
+filegroup(
+  name = "dashboard_debug_common_glob",
+  srcs = dashboard_common_glob,
+)
 
 dashboard_test_data = [
   "jest.setup.mjs",
   "jest_wrapper.mjs",
 ]
-dashboard_test_glob = glob(["__tests__/**", "__mocks__/**"], allow_empty = True)
+dashboard_test_glob = glob([
+  "__tests__/**",
+  "__mocks__/**",
+  "src/**/__tests__/**",
+  "src/**/__mocks__/**",
+], allow_empty = True)
+# Tests dashboard_test_glob
+# bazel cquery //services/frontend/dashboard:dashboard_debug_test_glob --output=files
+filegroup(
+  name = "dashboard_debug_test_glob",
+  srcs = dashboard_test_glob,
+)
 
 # Define a js_binary target for the Vite CLI itself.
 # This target (_vite_tool) can then be used as the 'tool' in other rules.
@@ -155,7 +188,8 @@ js_binary(
   name = "dashboard_prod",
   entry_point = "vite_wrapper.js",
   data = [":_vite_tool", "vite.config.bazelprod.ts"] + 
-    dashboard_package_data + dashboard_common_data + dashboard_common_glob,
+    dashboard_package_data + dashboard_common_data + 
+    dashboard_common_glob,
   env = {
     "NODE_ENV": "production",
     "VITE_BINARY_PATH": "$(rootpath :_vite_tool)", 
@@ -169,7 +203,8 @@ js_run_binary(
   name = "dashboard_build",
   tool = ":_dashboard_wrapper",
   srcs = [":_vite_tool", "vite.config.bazelprod.ts"] + 
-    dashboard_package_data + dashboard_common_data + dashboard_common_glob,
+    dashboard_package_data + dashboard_common_data + 
+    dashboard_common_glob,
   env = {
     "NODE_ENV": "production",
     "VITE_BINARY_PATH": "$(rootpath :_vite_tool)", 

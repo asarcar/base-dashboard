@@ -1,15 +1,16 @@
 import axios from 'axios';
-// ---------------------------- Student API ------------------------------------------------- //
-// export async function resendEmail(email: string) {
-//     try {
-//       const res = await axios.post("/auth/register/resend-email/", { email });
-//       return res.data;
-//     } catch (error) {
-//       console.log(error);
-//       return error;
-//     }
-// }
-
+/**
+ * ---------------------------- Student API ------------------------------------------------- //
+ * export async function resendEmail(email: string) {
+ *   try {
+ *     const res = await axios.post("/auth/register/resend-email/", { email });
+ *   return res.data;
+ *   } catch (error) {
+ *     console.error(`resendEmail error: ${error}`);
+ *     return error;
+ *   }
+ * }
+ */
 export async function getStudents(
   offset: number,
   pageLimit: number,
@@ -22,7 +23,7 @@ export async function getStudents(
     );
     return res.data;
   } catch (error) {
-    console.log(error);
+    console.error(`getStudents error: ${error}`);
     return error;
   }
 }

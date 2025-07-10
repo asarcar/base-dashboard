@@ -9,9 +9,9 @@ export const navItems: NavItem[] = [
   },
   {
     title: 'Members',
-    href: '/student',
+    href: '/team',
     icon: 'user',
-    label: 'Student'
+    label: 'Team'
   },
   {
     title: 'Identity Stores',
@@ -137,26 +137,26 @@ export const users = [
 export const dashboardCard = [
   {
     date: 'Today',
-    total: 2000,
-    role: 'Students',
+    total: 100,
+    role: 'Members',
     color: 'bg-[#EC4D61] bg-opacity-40'
   },
   {
     date: 'Today',
     total: 2000,
-    role: 'Teachers',
+    role: 'Employees',
     color: 'bg-[#FFEB95] bg-opacity-100'
   },
   {
     date: 'Today',
-    total: 2000,
-    role: 'Parents',
+    total: 400,
+    role: 'Managers',
     color: 'bg-[#84BD47] bg-opacity-30'
   },
   {
     date: 'Today',
-    total: 2000,
-    role: 'Schools',
+    total: 10,
+    role: 'Divisions',
     color: 'bg-[#D289FF] bg-opacity-30'
   }
 ];

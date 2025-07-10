@@ -1,10 +1,9 @@
-// services/frontend/dashboard/src/__tests__/task_panes.spec.tsx
-// import { jest } from '@jest/globals';
+// src/__tests__/task_panes.spec.tsx
 import { render, screen } from '@testing-library/react';
 import DashboardPage from '@/pages/dashboard';
 import { dashboardPanes } from '@/constants/panes';
 import { HelmetProvider } from 'react-helmet-async';
-import { jest } from '@jest/globals';
+// jest is  globally available in Jest test env, no need to import
 
 describe('Dashboard Task Panes', () => {
   it('renders all task panes from shared data', () => {

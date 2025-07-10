@@ -1,9 +1,11 @@
+// src/pages/students/index.tsx
 import PageHead from '@/components/shared/page-head';
-import { useGetStudents } from './queries/queries';
-import StudentsTable from './components/students-table';
+import { useGetStudents } from '@/pages/students/queries/queries';
+import StudentsTable from '@/pages/students/components/students-table';
 import { useSearchParams } from 'react-router-dom';
 import { DataTableSkeleton } from '@/components/shared/data-table-skeleton';
 import { Breadcrumbs } from '@/components/shared/breadcrumbs';
+import { ValidateReact } from '@/debug/DebugUtils';
 
 export default function StudentPage() {
   const [searchParams] = useSearchParams();
@@ -11,9 +13,9 @@ export default function StudentPage() {
   const pageLimit = Number(searchParams.get('limit') || 10);
   const country = searchParams.get('search') || null;
   const offset = (page - 1) * pageLimit;
-  const { data, isLoading } = useGetStudents(offset, pageLimit, country);
+  const { data, isLoading } = useGetStudents(offset, pageLimit, country ?? '');
   const users = data?.users;
-  const totalUsers = data?.total_users; //1000
+  const totalUsers = data?.total_users ?? 0; //1000
   const pageCount = Math.ceil(totalUsers / pageLimit);
 
   if (isLoading) {
@@ -30,11 +32,12 @@ export default function StudentPage() {
 
   return (
     <div className="p-4 md:p-8">
-      <PageHead title="Student Management | App" />
+      <ValidateReact name="StudentPage" />
+      <PageHead title="Team Management | App" />
       <Breadcrumbs
         items={[
           { title: 'Dashboard', link: '/' },
-          { title: 'Students', link: '/students' }
+          { title: 'Team', link: '/team' }
         ]}
       />
       <StudentsTable

@@ -1,7 +1,4 @@
-// services/frontend/dashboard/src/pages/terminal/index.tsx
-import FormPage from '@/pages/form';
-import NotFound from '@/pages/not-found';
-
+// src/pages/terminal/index.tsx
 import { useState, useEffect } from 'react';
 import {
   Terminal as TerminalIcon,
@@ -14,6 +11,7 @@ import {
   SAMPLE_DENIED_COMMAND,
   SOLICIT_INPUT_COMMANDS
 } from '@/constants/terminal_commands';
+import { ValidateReact } from '@/debug/DebugUtils';
 
 type CommandStatus = 'pending' | 'approved' | 'denied';
 
@@ -23,7 +21,7 @@ interface CommandOutput {
 }
 
 export default function TerminalPage() {
-  const [terminalOpen, setTerminalOpen] = useState(true); // Open by default
+  const [terminalOpen] = useState(true); // Open by default
   const [command, setCommand] = useState('');
   const [output, setOutput] = useState<CommandOutput[]>([
     { command: SAMPLE_APPROVED_COMMAND, status: 'approved' },
@@ -64,6 +62,7 @@ export default function TerminalPage() {
 
   return (
     <div className="relative flex h-full flex-1 flex-col">
+      <ValidateReact name="Terminal" />
       {terminalOpen && (
         <div className="absolute left-0 top-0 z-50 flex h-full w-full flex-col bg-black p-6 text-white">
           <div className="mb-4 flex items-center justify-between">

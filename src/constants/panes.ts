@@ -1,4 +1,4 @@
-// services/frontend/dashboard/src/constants/panes.ts
+// src/constants/panes.ts
 export const dashboardPanes = [
   {
     title: 'New',

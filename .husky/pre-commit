@@ -1,1 +1,3 @@
+# Pre-commit: Runs linting with auto-fix and formatting on staged files
+echo "Running lint-staged..."
 npx lint-staged

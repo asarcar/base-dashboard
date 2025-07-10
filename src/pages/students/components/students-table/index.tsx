@@ -1,13 +1,8 @@
+// src/pages/students/components/students-table/index.tsx
 import DataTable from '@/components/shared/data-table';
-import { columns } from './columns';
-import StudentTableActions from './student-table-action';
-
-type TStudentsTableProps = {
-  users: any;
-  page: number;
-  totalUsers: number;
-  pageCount: number;
-};
+import { columns } from '@/pages/students/components/students-table/columns';
+import StudentTableActions from '@/pages/students/components/students-table/student-table-action';
+import type { TStudentsTableProps } from '@/pages/students/queries/queries';
 
 export default function StudentsTable({
   users,

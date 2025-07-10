@@ -1,3 +1,4 @@
+// src/pages/students/components/student-feed-table/student-table-actions.tsx
 import PopupModal from '@/components/shared/popup-modal';
 import TableSearchInput from '@/components/shared/table-search-input';
 import { Button } from '@/components/ui/button';

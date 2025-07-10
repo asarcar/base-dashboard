@@ -1,3 +1,4 @@
+// src/pages/students/StudentDetailPage.tsx
 import Heading from '@/components/shared/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -5,9 +6,10 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useRouter } from '@/routes/hooks';
 import { ChevronLeftIcon, ShareIcon } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
-import InterestChannel from './components/interest-channel';
-import StudentFeedTable from './components/student-feed-table';
-import { useGetStudents } from './queries/queries';
+import InterestChannel from '@/pages/students/components/interest-channel';
+import StudentFeedTable from '@/pages/students/components/student-feed-table';
+import { useGetStudents } from '@/pages/students/queries/queries';
+import { ValidateReact } from '@/debug/DebugUtils';
 
 export default function StudentDetailPage() {
   const [searchParams] = useSearchParams();
@@ -15,9 +17,9 @@ export default function StudentDetailPage() {
   const pageLimit = Number(searchParams.get('limit') || 10);
   const country = searchParams.get('search') || null;
   const offset = (page - 1) * pageLimit;
-  const { data, isLoading } = useGetStudents(offset, pageLimit, country);
+  const { data, isLoading } = useGetStudents(offset, pageLimit, country ?? '');
   const users = data?.users;
-  const totalUsers = data?.total_users; //1000
+  const totalUsers = data?.total_users ?? 0; //1000
   const pageCount = Math.ceil(totalUsers / pageLimit);
   const router = useRouter();
   if (isLoading) {
@@ -25,6 +27,7 @@ export default function StudentDetailPage() {
   }
   return (
     <div className="p-10">
+      <ValidateReact name="StudentDetailsPage" />
       <div className="flex items-center justify-between">
         <Heading title={'Personal Details'} />
         <div className="flex justify-end gap-3">

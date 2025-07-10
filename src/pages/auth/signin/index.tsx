@@ -1,11 +1,17 @@
-import UserAuthForm from './components/user-auth-form';
+// src/pages/auth/signin/index.tsx
+import UserAuthForm from '@/pages/auth/signin/components/user-auth-form';
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import * as React from 'react';
+import * as RRD from 'react-router-dom';
+import { ValidateReactIDs, ValidateReact } from '@/debug/DebugUtils';
+ValidateReactIDs('Sign-In-Page-TOP', React, RRD);
 
 export default function SignInPage() {
   return (
     <div className="relative h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
+      <ValidateReact name="Sign-In-Page" />
       <Link
         to="/"
         className={cn(
