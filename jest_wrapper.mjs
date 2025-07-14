@@ -4,7 +4,6 @@ import path from 'path';
 import { spawnSync } from 'child_process';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { EnvelopeClosedIcon } from '@radix-ui/react-icons';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
