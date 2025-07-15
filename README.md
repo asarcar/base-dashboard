@@ -27,6 +27,18 @@ This is a starter template using the following stack:
 - Formatting - [Prettier](https://prettier.io)
 - Pre-commit hook - [Husky](https://typicode.github.io/husky/)
 
+## ⚠️ Upstream Notice
+
+This project originally forked from `react-shadcn-dashboard-starter`.
+
+That upstream has since evolved into `tanstack-start-dashboard`, a different architecture.
+
+We have retained the old fork and track the modern tanstack repo via a remote called `upstream-readonly`.
+
+Please do NOT `git merge` from that remote — use it only for reference and cherry-picking.
+
+See [.upstream-note.md](./.upstream-note.md) for full history.
+
 ## Pages
 
 | Pages                                                                  | Specifications                                                                   |
